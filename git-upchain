@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+version() {
+  echo "Git Upchain v0.0.1"
+}
+
+usage() {
+  echo "git upchain [options] [FROM] [TO]"
+}
+
+main() {
+  local subcommand="$1"
+
+  case $subcommand in
+    "-v"|"--version")
+      version
+      exit 0
+      ;;
+
+    "-h"|"--help")
+      usage
+      exit 0
+      ;;
+  esac
+
+  checkoutReleaseBranch "$1"
+  checkoutReleaseBranch "$2"
+  checkoutMergeBranch "$1" "$2"
+
+  mergeRelease "$1"
+
+  exit 0
+}
+
+getReleaseBranch() {
+  case $1 in
+    "master")
+      echo "$1"
+      return
+      ;;
+    *)
+      echo "release/$1"
+      return
+      ;;
+  esac
+}
+
+checkoutReleaseBranch() {
+  local releaseBranch=$(getReleaseBranch "$1")
+  git checkout $releaseBranch
+  git pull
+}
+
+checkoutMergeBranch() {
+  local mergeBranch="feature/merge-release-$1-into-$2"
+  git branch -D $mergeBranch
+  git checkout -b $mergeBranch
+}
+
+mergeRelease() {
+  local releaseBranch=$(getReleaseBranch "$1")
+  git merge $releaseBranch
+}
+
+main "$@"
